@@ -1,0 +1,12 @@
+# Config written on Wed Nov 11 13:09:10 +0100 CET 2020
+teamspeak:
+  host: 127.0.0.1
+  port: 10011
+  user: admin
+  password: admin
+neo4j:
+  host: 127.0.0.1
+  port: 7474
+  user: admin
+  password: admin
+  encrypted: false
