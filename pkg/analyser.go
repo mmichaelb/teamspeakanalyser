@@ -26,6 +26,11 @@ func (analyser *Analyser) Connect() {
 		analyser.Shutdown()
 		return
 	}
+	if err := analyser.setupNeo4j(); err != nil {
+		log.Printf("Could not setup Neo4j: %v", err)
+		analyser.Shutdown()
+		return
+	}
 	log.Println("Connected to Neo4j database server!")
 	log.Println("Connecting to TeamSpeak server...")
 	if err := analyser.connectTeamSpeak(); err != nil {

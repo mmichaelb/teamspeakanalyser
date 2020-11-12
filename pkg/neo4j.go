@@ -1,6 +1,7 @@
 package teamspeakanalyser
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"log"
 )
@@ -45,4 +46,90 @@ func (analyser *Analyser) closeNeo4j() {
 	} else {
 		log.Println("Closed Neo4j server connection.")
 	}
+}
+
+func (analyser *Analyser) setupNeo4j() error {
+	if err := analyser.createNeo4jConstraints(); err != nil {
+		return err
+	}
+	if err := analyser.createNeo4jSelfUser(); err != nil {
+		return err
+	}
+	if err := analyser.createNeo4jNameIndex(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (analyser *Analyser) createNeo4jConstraints() error {
+	if err := analyser.createNeo4jUniqueUserConstraint("user_cid", "cid"); err != nil {
+		return err
+	}
+	if err := analyser.createNeo4jUniqueUserConstraint("user_uid", "uid"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (analyser *Analyser) createNeo4jUniqueUserConstraint(name, fieldName string) error {
+	constraintsAdded, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err := transaction.Run(fmt.Sprintf("CREATE CONSTRAINT %s IF NOT EXISTS ON (u:User) ASSERT u.%s IS UNIQUE", name, fieldName), map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+		summary, err := result.Summary()
+		if err != nil {
+			return nil, err
+		}
+		return summary.Counters().ConstraintsAdded(), nil
+	})
+	if constraintsAdded == 1 {
+		log.Printf(`Created constraint "%s" for node "User".`, name)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (analyser *Analyser) createNeo4jSelfUser() error {
+	userAdded, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err := transaction.Run("MERGE (:User {name:$name,cid:$cid})", map[string]interface{}{"name": "self", "cid": -1})
+		if err != nil {
+			return nil, err
+		}
+		summary, err := result.Summary()
+		if err != nil {
+			return nil, err
+		}
+		return summary.Counters().NodesCreated(), nil
+	})
+	if userAdded == 1 {
+		log.Println(`Created "self" User node with cid -1.`)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (analyser *Analyser) createNeo4jNameIndex() error {
+	indexAdded, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err := transaction.Run("CREATE INDEX user_name IF NOT EXISTS FOR (u:User) ON (u.name)", map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+		summary, err := result.Summary()
+		if err != nil {
+			return nil, err
+		}
+		return summary.Counters().IndexesAdded(), nil
+	})
+	if indexAdded == 1 {
+		log.Println(`Created index "user_name" for User nodes.`)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
