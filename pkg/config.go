@@ -36,10 +36,11 @@ func WriteConfig(filename string, config *Config) error {
 
 type Config struct {
 	TeamSpeak struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
+		Host            string `yaml:"host"`
+		Port            int    `yaml:"port"`
+		User            string `yaml:"user"`
+		Password        string `yaml:"password"`
+		VirtualServerId int    `yaml:"virtual_server_id"`
 	} `yaml:"teamspeak"`
 	Neo4j struct {
 		Host      string `yaml:"host"`
