@@ -8,15 +8,18 @@ import (
 )
 
 type Analyser struct {
-	config                    *Config
-	teamSpeakClient           *ts3.Client
-	teamSpeakNotificationChan chan ts3.Notification
-	neo4jDriver               neo4j.Driver
-	neo4jSession              neo4j.Session
+	config          *Config
+	teamSpeakClient *ts3.Client
+	neo4jDriver     neo4j.Driver
+	neo4jSession    neo4j.Session
+	closeChan       chan struct{}
 }
 
 func New(config *Config) *Analyser {
-	return &Analyser{config: config}
+	return &Analyser{
+		config:    config,
+		closeChan: make(chan struct{}, 1),
+	}
 }
 
 func (analyser *Analyser) Connect() {
@@ -48,6 +51,9 @@ func (analyser *Analyser) Connect() {
 
 func (analyser *Analyser) Shutdown() {
 	log.Println("Shutting down analyser...")
+	analyser.closeChan <- struct{}{}
+	// wait for stop
+	<-analyser.closeChan
 	analyser.closeTeamSpeak()
 	analyser.closeNeo4j()
 	os.Exit(0)
