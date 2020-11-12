@@ -35,3 +35,16 @@ func (analyser *Analyser) connectNeo4j() (err error) {
 	log.Printf("Neo4j server is running version: %+v", version)
 	return
 }
+
+func (analyser *Analyser) closeNeo4j() {
+	if analyser.teamSpeakClient == nil {
+		return
+	}
+	fmt.Println("Closing Neo4j server connection...")
+	err := analyser.teamSpeakClient.Close()
+	if err != nil {
+		fmt.Printf("Could not close Neo4j server connection: %v", err)
+	} else {
+		fmt.Println("Closed Neo4j server connection.")
+	}
+}
