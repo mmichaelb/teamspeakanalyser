@@ -1,12 +1,12 @@
-# Config written on Wed Nov 11 13:09:10 +0100 CET 2020
+# Config written on Thu Nov 12 15:47:28 +0100 CET 2020
 teamspeak:
-  host: 127.0.0.1
-  port: 10011
-  user: admin
-  password: admin
+    host: 127.0.0.1
+    port: 10011
+    user: admin
+    password: admin
+    virtual_server_id: 1
 neo4j:
-  host: 127.0.0.1
-  port: 7474
-  user: admin
-  password: admin
-  encrypted: false
+    uri: bolt://127.0.0.1:7687
+    user: admin
+    password: admin
+    encrypted: false

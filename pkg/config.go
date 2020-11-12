@@ -43,8 +43,7 @@ type Config struct {
 		VirtualServerId int    `yaml:"virtual_server_id"`
 	} `yaml:"teamspeak"`
 	Neo4j struct {
-		Host      string `yaml:"host"`
-		Port      int    `yaml:"port"`
+		Uri       string `yaml:"uri"`
 		User      string `yaml:"user"`
 		Password  string `yaml:"password"`
 		Encrypted bool   `yaml:"encrypted"`

@@ -8,8 +8,7 @@ import (
 
 func (analyser *Analyser) connectNeo4j() (err error) {
 	config := analyser.config.Neo4j
-	uri := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	analyser.neo4jDriver, err = neo4j.NewDriver(uri, neo4j.BasicAuth(config.User, config.Password, ""), func(c *neo4j.Config) {
+	analyser.neo4jDriver, err = neo4j.NewDriver(config.Uri, neo4j.BasicAuth(config.User, config.Password, ""), func(c *neo4j.Config) {
 		c.Encrypted = config.Encrypted
 	})
 	if err != nil {
