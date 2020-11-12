@@ -1,7 +1,6 @@
 package teamspeakanalyser
 
 import (
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"log"
 )
@@ -39,11 +38,11 @@ func (analyser *Analyser) closeNeo4j() {
 	if analyser.neo4jDriver == nil {
 		return
 	}
-	fmt.Println("Closing Neo4j server connection...")
+	log.Println("Closing Neo4j server connection...")
 	err := analyser.neo4jDriver.Close()
 	if err != nil {
-		fmt.Printf("Could not close Neo4j server connection: %v", err)
+		log.Printf("Could not close Neo4j server connection: %v", err)
 	} else {
-		fmt.Println("Closed Neo4j server connection.")
+		log.Println("Closed Neo4j server connection.")
 	}
 }

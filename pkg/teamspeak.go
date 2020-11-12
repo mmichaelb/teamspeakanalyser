@@ -31,12 +31,12 @@ func (analyser *Analyser) closeTeamSpeak() {
 	if analyser.teamSpeakClient == nil {
 		return
 	}
-	fmt.Println("Closing TeamSpeak server connection...")
+	log.Println("Closing TeamSpeak server connection...")
 	err := analyser.teamSpeakClient.Close()
 	if err != nil {
-		fmt.Printf("Could not close TeamSpeak server connection: %v", err)
+		log.Printf("Could not close TeamSpeak server connection: %v", err)
 	} else {
-		fmt.Println("Closed TeamSpeak server connection.")
+		log.Println("Closed TeamSpeak server connection.")
 	}
 }
 
