@@ -41,21 +41,32 @@ func (analyser *Analyser) setupTeamSpeak() (err error) {
 
 	notificationChannel := make(chan ts3.Notification, ts3.DefaultNotifyBufSize)
 	go func() {
+	infiniteLoop:
 		for {
-			notification := <-analyser.teamSpeakClient.Notifications()
-			clId, ok := notification.Data[clIdKeyName]
-			notificationChannel <- notification
-			notificationChannel = analyser.checkForSecondTeamSpeakNotification(notification, ok, clId, notificationChannel)
+			select {
+			case notification := <-analyser.teamSpeakClient.Notifications():
+				clId, ok := notification.Data[clIdKeyName]
+				notificationChannel <- notification
+				analyser.checkForSecondTeamSpeakNotification(notification, ok, clId, notificationChannel)
+				break
+			case <-analyser.teamSpeakReadStopChan:
+				break infiniteLoop
+			}
+		}
+		log.Println("Closing TeamSpeak server connection...")
+		if err := analyser.teamSpeakClient.Close(); err != nil {
+			log.Printf("Could not close TeamSpeak server connection: %e", err)
+		} else {
+			log.Println("Closed TeamSpeak server connection.")
 		}
 	}()
 	return nil
 }
 
-func (analyser *Analyser) checkForSecondTeamSpeakNotification(notification ts3.Notification, ok bool, clId string, notificationChannel chan ts3.Notification) chan ts3.Notification {
+func (analyser *Analyser) checkForSecondTeamSpeakNotification(notification ts3.Notification, ok bool, clId string, notificationChannel chan ts3.Notification) {
 	secondNotification := <-analyser.teamSpeakClient.Notifications()
 	secondClientUniqueIdentifier, secondOk := secondNotification.Data[clIdKeyName]
 	if notification.Type != secondNotification.Type || !ok || !secondOk || clId != secondClientUniqueIdentifier {
 		notificationChannel <- secondNotification
 	}
-	return notificationChannel
 }

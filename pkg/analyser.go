@@ -7,10 +7,11 @@ import (
 )
 
 type Analyser struct {
-	config          *Config
-	teamSpeakClient *ts3.Client
-	neo4jDriver     neo4j.Driver
-	neo4jSession    neo4j.Session
+	config                *Config
+	teamSpeakClient       *ts3.Client
+	neo4jDriver           neo4j.Driver
+	neo4jSession          neo4j.Session
+	teamSpeakReadStopChan chan struct{}
 }
 
 func New(config *Config) *Analyser {
