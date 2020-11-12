@@ -54,24 +54,11 @@ func (analyser *Analyser) setupTeamSpeak() (err error) {
 
 	analyser.teamSpeakNotificationChan = make(chan ts3.Notification, ts3.DefaultNotifyBufSize)
 	go func() {
-	infiniteLoop:
 		for {
-			select {
-			case notification := <-analyser.teamSpeakClient.Notifications():
-				clId, ok := notification.Data[clIdKeyName]
-				analyser.teamSpeakNotificationChan <- notification
-				analyser.checkForSecondTeamSpeakNotification(notification, ok, clId)
-				break
-			case <-analyser.teamSpeakReadStopChan:
-				analyser.teamSpeakNotificationChan <- ts3.Notification{Type: "closed"}
-				break infiniteLoop
-			}
-		}
-		log.Println("Closing TeamSpeak server connection...")
-		if err := analyser.teamSpeakClient.Close(); err != nil {
-			log.Printf("Could not close TeamSpeak server connection: %v", err)
-		} else {
-			log.Println("Closed TeamSpeak server connection.")
+			notification := <-analyser.teamSpeakClient.Notifications()
+			clId, ok := notification.Data[clIdKeyName]
+			analyser.teamSpeakNotificationChan <- notification
+			analyser.checkForSecondTeamSpeakNotification(notification, ok, clId)
 		}
 	}()
 	return nil
