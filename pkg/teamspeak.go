@@ -79,8 +79,17 @@ func (analyser *Analyser) setupTeamSpeak() (err error) {
 
 func (analyser *Analyser) checkForSecondTeamSpeakNotification(notification ts3.Notification, ok bool, clId string) {
 	secondNotification := <-analyser.teamSpeakClient.Notifications()
-	secondClientUniqueIdentifier, secondOk := secondNotification.Data[clIdKeyName]
-	if notification.Type != secondNotification.Type || !ok || !secondOk || clId != secondClientUniqueIdentifier {
-		notificationChannel <- secondNotification
+	secondClId, secondOk := secondNotification.Data[clIdKeyName]
+	if notification.Type != secondNotification.Type || !ok || !secondOk || clId != secondClId {
+		analyser.teamSpeakNotificationChan <- secondNotification
 	}
+}
+
+func (analyser *Analyser) startListening() {
+	go func() {
+		for {
+			notification := <-analyser.teamSpeakNotificationChan
+			log.Printf("notification: %+v", notification)
+		}
+	}()
 }
