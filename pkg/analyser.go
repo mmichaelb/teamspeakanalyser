@@ -31,6 +31,10 @@ func (analyser *Analyser) Connect() {
 		log.Printf("Could not connect to TeamSpeak server: %v", err)
 		analyser.Shutdown()
 	}
+	if err := analyser.setupTeamSpeak(); err != nil {
+		log.Printf("Could not setup TeamSpeak server: %v", err)
+		analyser.Shutdown()
+	}
 	log.Println("Connected to TeamSpeak server!")
 }
 
