@@ -16,4 +16,5 @@ func main() {
 	}
 	analyser := teamspeakanalyser.New(config)
 	analyser.Connect()
+	analyser.StartListening()
 }

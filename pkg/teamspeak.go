@@ -72,11 +72,15 @@ func (analyser *Analyser) checkForSecondTeamSpeakNotification(notification ts3.N
 	}
 }
 
-func (analyser *Analyser) startListening() {
-	go func() {
-		for {
-			notification := <-analyser.teamSpeakNotificationChan
-			log.Printf("notification: %+v", notification)
-		}
-	}()
+/**
+clientmoved - user changes the channel/is being moved
+cliententerview - user enters the channel
+
+*/
+// TODO keep default channel in mind
+func (analyser *Analyser) StartListening() {
+	for {
+		notification := <-analyser.teamSpeakNotificationChan
+		log.Printf("notification: %+v", notification)
+	}
 }
