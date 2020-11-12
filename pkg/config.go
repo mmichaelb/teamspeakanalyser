@@ -13,10 +13,10 @@ func ReadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 	defer file.Close()
-	var config *Config
+	config := &Config{}
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(config)
-	return nil, err
+	return config, err
 }
 
 func WriteConfig(filename string, config *Config) error {
