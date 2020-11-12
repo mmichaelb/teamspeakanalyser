@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"log"
 	"os"
+	"time"
 )
 
 type Analyser struct {
@@ -13,6 +14,7 @@ type Analyser struct {
 	neo4jDriver     neo4j.Driver
 	neo4jSession    neo4j.Session
 	closeChan       chan struct{}
+	interval        time.Duration
 }
 
 func New(config *Config) *Analyser {
@@ -47,6 +49,13 @@ func (analyser *Analyser) Connect() {
 		return
 	}
 	log.Println("Connected to TeamSpeak server!")
+	var err error
+	analyser.interval, err = time.ParseDuration(analyser.config.Query.Interval)
+	if err != nil {
+		log.Printf("Could not parse interval duration from config: %v", err)
+		analyser.Shutdown()
+		return
+	}
 }
 
 func (analyser *Analyser) Shutdown() {

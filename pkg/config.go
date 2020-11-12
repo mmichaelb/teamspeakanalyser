@@ -35,6 +35,9 @@ func WriteConfig(filename string, config *Config) error {
 }
 
 type Config struct {
+	Query struct {
+		Interval string `yaml:"interval_seconds"`
+	} `yaml:"query"`
 	TeamSpeak struct {
 		Host            string `yaml:"host"`
 		Port            int    `yaml:"port"`
