@@ -36,11 +36,11 @@ func (analyser *Analyser) connectNeo4j() (err error) {
 }
 
 func (analyser *Analyser) closeNeo4j() {
-	if analyser.teamSpeakClient == nil {
+	if analyser.neo4jDriver == nil {
 		return
 	}
 	fmt.Println("Closing Neo4j server connection...")
-	err := analyser.teamSpeakClient.Close()
+	err := analyser.neo4jDriver.Close()
 	if err != nil {
 		fmt.Printf("Could not close Neo4j server connection: %v", err)
 	} else {
