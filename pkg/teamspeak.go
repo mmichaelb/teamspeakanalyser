@@ -153,27 +153,14 @@ func (analyser *Analyser) mapClients(clientList []*clientInfo) map[int][]*client
 }
 
 func (analyser *Analyser) registerSelfInteraction(clientInfo *clientInfo, weightName string) error {
-	_, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		query := fmt.Sprintf("MATCH (u:User) WHERE u.uid = $uid MERGE (u)-[h:HANGS_WITH]->(u) "+
-			"WITH h, COALESCE(h.%s, 0) as old_count "+
-			"SET h.last_interaction = datetime(), h.%s = old_count + 1", weightName, weightName)
-		result, err := transaction.Run(query,
-			map[string]interface{}{
-				"uid":    clientInfo.UniqueIdentifier,
-				"amount": analyser.interval.Seconds(),
-			})
-		if err != nil {
-			return nil, err
-		}
-		if result.Err() != nil {
-			return nil, result.Err()
-		}
-		return nil, nil
-	})
-	return err
+	return analyser.registerUserInteraction(clientInfo, clientInfo, weightName)
 }
 
 func (analyser *Analyser) registerOtherInteraction(clientInfo *clientInfo, talkToClientInfo *clientInfo, weightName string) error {
+	return analyser.registerUserInteraction(clientInfo, talkToClientInfo, weightName)
+}
+
+func (analyser *Analyser) registerUserInteraction(clientInfo *clientInfo, talkToClientInfo *clientInfo, weightName string) error {
 	_, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		query := fmt.Sprintf("MATCH (u:User),(u2:User) WHERE u.uid = $uid AND u2.uid = $talkToUid "+
 			"MERGE (u)-[h:HANGS_WITH]->(u2) "+
