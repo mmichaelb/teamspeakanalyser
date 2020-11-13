@@ -61,10 +61,6 @@ func (analyser *Analyser) setupTeamSpeak() (err error) {
 	return nil
 }
 
-/**
-clientmoved - user changes the channel/is being moved
-cliententerview - user enters the channel
-*/
 type clientInfo struct {
 	ID                 int    `ms:"clid"`
 	UniqueIdentifier   string `ms:"client_unique_identifier"`
@@ -86,7 +82,6 @@ type clientInfo struct {
 	IsChannelCommander int    `ms:"client_is_channel_commander"`
 }
 
-// TODO keep default channel in mind
 func (analyser *Analyser) StartListening() {
 listenerLoop:
 	for {
