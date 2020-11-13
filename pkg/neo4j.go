@@ -52,9 +52,6 @@ func (analyser *Analyser) setupNeo4j() error {
 	if err := analyser.createNeo4jConstraints(); err != nil {
 		return err
 	}
-	if err := analyser.createNeo4jSelfUser(); err != nil {
-		return err
-	}
 	if err := analyser.createNeo4jNameIndex(); err != nil {
 		return err
 	}
@@ -85,27 +82,6 @@ func (analyser *Analyser) createNeo4jUniqueUserConstraint(name, fieldName string
 	})
 	if constraintsAdded == 1 {
 		log.Printf(`Created constraint "%s" for node "User".`, name)
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (analyser *Analyser) createNeo4jSelfUser() error {
-	userAdded, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		result, err := transaction.Run("MERGE (:User {name:$name,cid:$cid})", map[string]interface{}{"name": "self", "cid": -1})
-		if err != nil {
-			return nil, err
-		}
-		summary, err := result.Summary()
-		if err != nil {
-			return nil, err
-		}
-		return summary.Counters().NodesCreated(), nil
-	})
-	if userAdded == 1 {
-		log.Println(`Created "self" User node with cid -1.`)
 	}
 	if err != nil {
 		return err
