@@ -4,6 +4,8 @@ import (
 	"flag"
 	teamspeakanalyser "github.com/mmichaelb/teamspeakanalyser/pkg"
 	"log"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -17,4 +19,10 @@ func main() {
 	analyser := teamspeakanalyser.New(config)
 	analyser.Connect()
 	analyser.StartListening()
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt)
+	<-signalChannel
+	log.Println("Shutting down...")
+	analyser.Shutdown()
+	log.Println("Bye!")
 }
