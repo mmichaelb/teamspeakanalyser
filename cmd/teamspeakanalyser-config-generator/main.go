@@ -5,8 +5,12 @@ import teamspeakanalyser "github.com/mmichaelb/teamspeakanalyser/pkg"
 func main() {
 	defaultConfig := &teamspeakanalyser.Config{
 		Query: struct {
-			Interval string `yaml:"interval_seconds"`
-		}{Interval: "30s"},
+			Interval     string   `yaml:"interval_seconds"`
+			OmitChannels []string `yaml:"omit_channels"`
+		}{
+			Interval:     "30s",
+			OmitChannels: []string{"Default Channel"},
+		},
 		TeamSpeak: struct {
 			Host            string `yaml:"host"`
 			Port            int    `yaml:"port"`

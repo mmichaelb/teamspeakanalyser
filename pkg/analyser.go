@@ -15,6 +15,7 @@ type Analyser struct {
 	neo4jSession    neo4j.Session
 	closeChan       chan struct{}
 	interval        time.Duration
+	omitChannels    []int
 }
 
 func New(config *Config) *Analyser {

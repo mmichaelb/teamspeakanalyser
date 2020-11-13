@@ -46,6 +46,18 @@ func (analyser *Analyser) setupTeamSpeak() (err error) {
 	if err := analyser.teamSpeakClient.Use(config.VirtualServerId); err != nil {
 		return err
 	}
+	analyser.omitChannels = []int{}
+	channels, err := analyser.teamSpeakClient.Server.ChannelList()
+	if err != nil {
+		return err
+	}
+	for _, channel := range channels {
+		for _, omitChannel := range analyser.config.Query.OmitChannels {
+			if omitChannel == channel.ChannelName {
+				analyser.omitChannels = append(analyser.omitChannels, channel.ID)
+			}
+		}
+	}
 	return nil
 }
 
@@ -134,11 +146,20 @@ func (analyser *Analyser) updateDatabase() bool {
 	return true
 }
 
+func (analyser *Analyser) isChannelOmitted(clientInfo *clientInfo) bool {
+	for _, channelId := range analyser.omitChannels {
+		if channelId == clientInfo.ChannelID {
+			return true
+		}
+	}
+	return false
+}
+
 func (analyser *Analyser) mapClients(clientList []*clientInfo) map[int][]*clientInfo {
 	channelClientMapping := make(map[int][]*clientInfo)
 	for _, client := range clientList {
-		if client.Type != 0 {
-			// omit non-standard client connections (e.g. Query-Connections)
+		if client.Type != 0 || analyser.isChannelOmitted(client) {
+			// omit non-standard client connections (e.g. Query-Connections) and ignored channels
 			continue
 		}
 		channelClientList, ok := channelClientMapping[client.ChannelID]
