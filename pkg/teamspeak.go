@@ -165,11 +165,11 @@ func (analyser *Analyser) registerUserInteraction(clientInfo *clientInfo, talkTo
 		query := fmt.Sprintf("MATCH (u:User),(u2:User) WHERE u.uid = $uid AND u2.uid = $talkToUid "+
 			"MERGE (u)-[h:HANGS_WITH]->(u2) "+
 			"WITH h, COALESCE(h.%s, 0) as old_count "+
-			"SET h.last_interaction = datetime(), h.%s = old_count + 1", weightName, weightName)
+			"SET h.last_interaction = datetime(), h.%s = old_count + $amount", weightName, weightName)
 		result, err := transaction.Run(query, map[string]interface{}{
 			"uid":       clientInfo.UniqueIdentifier,
 			"talkToUid": talkToClientInfo.UniqueIdentifier,
-			"amount":    analyser.interval.Seconds(),
+			"amount":    int64(analyser.interval.Seconds()),
 		})
 		if err != nil {
 			return nil, err
