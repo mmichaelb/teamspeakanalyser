@@ -59,7 +59,7 @@ func (analyser *Analyser) setupNeo4j() error {
 }
 
 func (analyser *Analyser) createNeo4jConstraints() error {
-	if err := analyser.createNeo4jUniqueUserConstraint("user_cid", "cid"); err != nil {
+	if err := analyser.createNeo4jUniqueUserConstraint("user_clid", "clid"); err != nil {
 		return err
 	}
 	if err := analyser.createNeo4jUniqueUserConstraint("user_uid", "uid"); err != nil {
