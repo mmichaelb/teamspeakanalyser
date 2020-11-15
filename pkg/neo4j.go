@@ -65,6 +65,9 @@ func (analyser *Analyser) createNeo4jConstraints() error {
 	if err := analyser.createNeo4jUniqueUserConstraint("user_uid", "uid"); err != nil {
 		return err
 	}
+	if err := analyser.createNeo4jUniqueChannelIdConstraint(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -82,6 +85,27 @@ func (analyser *Analyser) createNeo4jUniqueUserConstraint(name, fieldName string
 	})
 	if constraintsAdded == 1 {
 		log.Printf(`Created constraint "%s" for node "User".`, name)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (analyser *Analyser) createNeo4jUniqueChannelIdConstraint() error {
+	constraintsAdded, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err := transaction.Run(fmt.Sprintf("CREATE CONSTRAINT channel_id IF NOT EXISTS ON (c:Channel) ASSERT c.id IS UNIQUE"), map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+		summary, err := result.Summary()
+		if err != nil {
+			return nil, err
+		}
+		return summary.Counters().ConstraintsAdded(), nil
+	})
+	if constraintsAdded == 1 {
+		log.Println(`Created constraint "channel_id" for node "Channel".`)
 	}
 	if err != nil {
 		return err
