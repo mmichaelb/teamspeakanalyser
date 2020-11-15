@@ -282,7 +282,7 @@ func (analyser *Analyser) createNeo4jUserEntry(clientInfo *clientInfo) (bool, er
 func (analyser *Analyser) createNeo4jChannelEntry(channel *ts3.Channel) (bool, error) {
 	created, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		result, err := transaction.Run("MERGE (c:Channel {id:$id}) "+
-			"SET u.name = $name", map[string]interface{}{
+			"SET c.name = $name", map[string]interface{}{
 			"id":   channel.ID,
 			"name": channel.ChannelName,
 		})
