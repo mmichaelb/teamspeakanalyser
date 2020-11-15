@@ -115,6 +115,23 @@ func (analyser *Analyser) updateDatabase() bool {
 			log.Printf("Created new node entry for user %s (%s)", strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier)
 		}
 	}
+	channels, err := analyser.teamSpeakClient.Server.ChannelList()
+	if err != nil {
+		log.Printf("Could not retrieve channel list: %v", err)
+		return false
+	}
+	for _, channel := range channels {
+		// ignore unimportant channels
+		if channel.TotalClients == 0 {
+			continue
+		}
+		if created, err := analyser.createNeo4jChannelEntry(channel); err != nil {
+			log.Printf("Could not create new node entry channel %s (%d): %v", strconv.Quote(channel.ChannelName), channel.ID, err)
+			return false
+		} else if created {
+			log.Printf("Created new node entry for channel %s (%d).", strconv.Quote(channel.ChannelName), channel.ID)
+		}
+	}
 	channelClientMapping := analyser.mapClients(clientList)
 	for _, clients := range channelClientMapping {
 		for _, clientInfo := range clients {
@@ -217,6 +234,31 @@ func (analyser *Analyser) createNeo4jUserEntry(clientInfo *clientInfo) (bool, er
 			"uid":  clientInfo.UniqueIdentifier,
 			"name": clientInfo.Nickname,
 			"clid": clientInfo.ID,
+		})
+		if err != nil {
+			return false, err
+		}
+		if result.Err() != nil {
+			return nil, result.Err()
+		}
+		summary, err := result.Summary()
+		if err != nil {
+			return false, err
+		}
+		return summary.Counters().NodesCreated() >= 1, nil
+	})
+	if created == nil {
+		return false, err
+	}
+	return created.(bool), nil
+}
+
+func (analyser *Analyser) createNeo4jChannelEntry(channel *ts3.Channel) (bool, error) {
+	created, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err := transaction.Run("MERGE (c:Channel {id:$id}) "+
+			"SET u.name = $name", map[string]interface{}{
+			"id":   channel.ID,
+			"name": channel.ChannelName,
 		})
 		if err != nil {
 			return false, err
