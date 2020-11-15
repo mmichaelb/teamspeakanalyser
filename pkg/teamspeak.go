@@ -133,9 +133,13 @@ func (analyser *Analyser) updateDatabase() bool {
 		}
 	}
 	channelClientMapping := analyser.mapClients(clientList)
-	for _, clients := range channelClientMapping {
+	for channelId, clients := range channelClientMapping {
 		for _, clientInfo := range clients {
 			weightName := determineIncrementWeight(clientInfo)
+			if err := analyser.registerChannelInteraction(channelId, clientInfo, weightName); err != nil {
+				log.Printf("Could not update channel interaction for channel %d and user %s (%s): %v", channelId, strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier, err)
+				return false
+			}
 			if len(clients) == 1 {
 				// add suffix if user is alone in the channel
 				weightName = fmt.Sprintf("%s_alone", weightName)
@@ -203,6 +207,28 @@ func (analyser *Analyser) registerUserInteraction(clientInfo *clientInfo, talkTo
 			"uid":       clientInfo.UniqueIdentifier,
 			"talkToUid": talkToClientInfo.UniqueIdentifier,
 			"amount":    int64(analyser.interval.Seconds()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if result.Err() != nil {
+			return nil, result.Err()
+		}
+		return nil, nil
+	})
+	return err
+}
+
+func (analyser Analyser) registerChannelInteraction(channelId int, clientInfo *clientInfo, weightName string) error {
+	_, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		query := fmt.Sprintf("MATCH (c:Channel),(u:User) WHERE c.id = $id AND u.uid = $uid "+
+			"MERGE (u)-[h:HANGS_IN]->(c) "+
+			"WITH h, COALESCE(h.%s, 0) as old_count "+
+			"SET h.last_interaction = datetime(), h.%s = old_count + $amount", weightName, weightName)
+		result, err := transaction.Run(query, map[string]interface{}{
+			"id":     channelId,
+			"uid":    clientInfo.UniqueIdentifier,
+			"amount": int64(analyser.interval.Seconds()),
 		})
 		if err != nil {
 			return nil, err
