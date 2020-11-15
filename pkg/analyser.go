@@ -3,7 +3,7 @@ package teamspeakanalyser
 import (
 	"github.com/multiplay/go-ts3"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
 )
@@ -26,41 +26,41 @@ func New(config *Config) *Analyser {
 }
 
 func (analyser *Analyser) Connect() {
-	log.Println("Connecting to Neo4j database server...")
+	log.Println("connecting to Neo4j database server...")
 	if err := analyser.connectNeo4j(); err != nil {
-		log.Printf("Could not connect to Neo4j database server: %v", err)
+		log.WithError(err).Errorln("could not connect to Neo4j database server")
 		analyser.Shutdown()
 		return
 	}
 	if err := analyser.setupNeo4j(); err != nil {
-		log.Printf("Could not setup Neo4j: %v", err)
+		log.WithError(err).Errorln("could not setup Neo4j")
 		analyser.Shutdown()
 		return
 	}
-	log.Println("Connected to Neo4j database server!")
-	log.Println("Connecting to TeamSpeak server...")
+	log.Println("connected to Neo4j database server")
+	log.Println("connecting to TeamSpeak server...")
 	if err := analyser.connectTeamSpeak(); err != nil {
-		log.Printf("Could not connect to TeamSpeak server: %v", err)
+		log.WithError(err).Errorln("could not connect to TeamSpeak server")
 		analyser.Shutdown()
 		return
 	}
 	if err := analyser.setupTeamSpeak(); err != nil {
-		log.Printf("Could not setup TeamSpeak server: %v", err)
+		log.WithError(err).Errorln("could not setup TeamSpeak server")
 		analyser.Shutdown()
 		return
 	}
-	log.Println("Connected to TeamSpeak server!")
+	log.Println("connected to TeamSpeak server")
 	var err error
 	analyser.interval, err = time.ParseDuration(analyser.config.Query.Interval)
 	if err != nil {
-		log.Printf("Could not parse interval duration from config: %v", err)
+		log.WithError(err).Errorln("could not parse interval duration from config")
 		analyser.Shutdown()
 		return
 	}
 }
 
 func (analyser *Analyser) Shutdown() {
-	log.Println("Shutting down analyser...")
+	log.Println("shutting down analyser...")
 	analyser.closeChan <- struct{}{}
 	// wait for stop
 	<-analyser.closeChan

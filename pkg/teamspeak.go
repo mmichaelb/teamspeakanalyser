@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"github.com/multiplay/go-ts3"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"log"
-	"strconv"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 func (analyser *Analyser) connectTeamSpeak() (err error) {
 	config := analyser.config.TeamSpeak
 	serverAddress := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	log.Printf("Using TeamSpeak Server Address: %s", serverAddress)
+	log.WithField("teamspeakAddr", serverAddress).Println("TeamSpeak connection debug")
 	analyser.teamSpeakClient, err = ts3.NewClient(serverAddress)
 	if err != nil {
 		return err
@@ -23,7 +22,7 @@ func (analyser *Analyser) connectTeamSpeak() (err error) {
 	if version, err := analyser.teamSpeakClient.Version(); err != nil {
 		return err
 	} else {
-		log.Printf("TeamSpeak is running version: %+v\n", version)
+		log.WithField("version", version).Println("TeamSpeak server debug")
 	}
 	return
 }
@@ -32,12 +31,12 @@ func (analyser *Analyser) closeTeamSpeak() {
 	if analyser.teamSpeakClient == nil {
 		return
 	}
-	log.Println("Closing TeamSpeak server connection...")
+	log.Println("closing TeamSpeak server connection...")
 	err := analyser.teamSpeakClient.Close()
 	if err != nil {
-		log.Printf("Could not close TeamSpeak server connection: %v", err)
+		log.WithError(err).Errorln("could not close TeamSpeak server connection")
 	} else {
-		log.Println("Closed TeamSpeak server connection.")
+		log.Println("closed TeamSpeak server connection.")
 	}
 }
 
@@ -96,11 +95,11 @@ listenerLoop:
 }
 
 func (analyser *Analyser) updateDatabase() bool {
-	log.Println("Updating database...")
+	log.Println("updating database...")
 	var clientList []*clientInfo
 	_, err := analyser.teamSpeakClient.ExecCmd(ts3.NewCmd("clientlist").WithOptions("-voice", "-uid").WithResponse(&clientList))
 	if err != nil {
-		log.Printf("Could not retrieve clientInfo list: %v", err)
+		log.WithError(err).Errorln("could not retrieve clientInfo list")
 		return false
 	}
 	for _, clientInfo := range clientList {
@@ -109,15 +108,15 @@ func (analyser *Analyser) updateDatabase() bool {
 			continue
 		}
 		if created, err := analyser.createNeo4jUserEntry(clientInfo); err != nil {
-			log.Printf("Could not create new node entry for %s (%s): %v", strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier, err)
+			log.WithField("clientName", clientInfo.Nickname).WithField("clientUniqueIdentifier", clientInfo.UniqueIdentifier).WithError(err).Errorln("could not create new user node entry")
 			return false
 		} else if created {
-			log.Printf("Created new node entry for user %s (%s)", strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier)
+			log.WithField("clientName", clientInfo.Nickname).WithField("clientUniqueIdentifier", clientInfo.UniqueIdentifier).Println("created new user node")
 		}
 	}
 	channels, err := analyser.teamSpeakClient.Server.ChannelList()
 	if err != nil {
-		log.Printf("Could not retrieve channel list: %v", err)
+		log.WithError(err).Errorln("could not retrieve channel list")
 		return false
 	}
 	for _, channel := range channels {
@@ -126,10 +125,10 @@ func (analyser *Analyser) updateDatabase() bool {
 			continue
 		}
 		if created, err := analyser.createNeo4jChannelEntry(channel); err != nil {
-			log.Printf("Could not create new node entry channel %s (%d): %v", strconv.Quote(channel.ChannelName), channel.ID, err)
+			log.WithField("channelName", channel.ChannelName).WithField("channelId", channel.ID).WithError(err).Errorln("could not create new channel node")
 			return false
 		} else if created {
-			log.Printf("Created new node entry for channel %s (%d).", strconv.Quote(channel.ChannelName), channel.ID)
+			log.WithField("channelName", channel.ChannelName).WithField("channelId", channel.ID).Println("created new channel node")
 		}
 	}
 	channelClientMapping := analyser.mapClients(clientList)
@@ -137,7 +136,7 @@ func (analyser *Analyser) updateDatabase() bool {
 		for _, clientInfo := range clients {
 			weightName := determineIncrementWeight(clientInfo)
 			if err := analyser.registerChannelInteraction(channelId, clientInfo, weightName); err != nil {
-				log.Printf("Could not update channel interaction for channel %d and user %s (%s): %v", channelId, strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier, err)
+				log.WithField("channelId", channelId).WithField("clientName", clientInfo.Nickname).WithField("clientUniqueIdentifier", clientInfo.UniqueIdentifier).WithError(err).Errorln("could not update channel interaction")
 				return false
 			}
 			if len(clients) == 1 {
@@ -145,7 +144,7 @@ func (analyser *Analyser) updateDatabase() bool {
 				weightName = fmt.Sprintf("%s_alone", weightName)
 			}
 			if err := analyser.registerSelfInteraction(clientInfo, weightName); err != nil {
-				log.Printf("Could not update self interaction for %s (%s): %v", strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier, err)
+				log.WithField("clientName", clientInfo.Nickname).WithField("clientUniqueIdentifier", clientInfo.UniqueIdentifier).WithError(err).Errorln("could not update self interaction")
 				return false
 			}
 			for _, clientTalkTo := range clients {
@@ -153,7 +152,7 @@ func (analyser *Analyser) updateDatabase() bool {
 					continue
 				}
 				if err := analyser.registerOtherInteraction(clientInfo, clientTalkTo, weightName); err != nil {
-					log.Printf("Could not update interaction from %s (%s) to %s (%s): %v", strconv.Quote(clientInfo.Nickname), clientInfo.UniqueIdentifier, strconv.Quote(clientTalkTo.Nickname), clientTalkTo.UniqueIdentifier, err)
+					log.WithField("clientName", clientInfo.Nickname).WithField("clientTalkToUniqueIdentifier", clientTalkTo.UniqueIdentifier).WithField("clientTalkToName", clientTalkTo.Nickname).WithField("clientUniqueIdentifier", clientInfo.UniqueIdentifier).WithError(err).Println("could not update interaction")
 					return false
 				}
 			}

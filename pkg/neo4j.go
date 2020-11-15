@@ -3,7 +3,7 @@ package teamspeakanalyser
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func (analyser *Analyser) connectNeo4j() (err error) {
@@ -31,7 +31,7 @@ func (analyser *Analyser) connectNeo4j() (err error) {
 	if err != nil {
 		return
 	}
-	log.Printf("Neo4j server is running version: %+v", version)
+	log.WithField("neo4j-server-version", version).Println("Neo4j server debug")
 	return
 }
 
@@ -39,12 +39,12 @@ func (analyser *Analyser) closeNeo4j() {
 	if analyser.neo4jDriver == nil {
 		return
 	}
-	log.Println("Closing Neo4j server connection...")
+	log.Println("closing Neo4j server connection...")
 	err := analyser.neo4jDriver.Close()
 	if err != nil {
-		log.Printf("Could not close Neo4j server connection: %v", err)
+		log.WithError(err).Println("could not close Neo4j server connection")
 	} else {
-		log.Println("Closed Neo4j server connection.")
+		log.Println("closed Neo4j server connection")
 	}
 }
 
@@ -84,7 +84,7 @@ func (analyser *Analyser) createNeo4jUniqueUserConstraint(name, fieldName string
 		return summary.Counters().ConstraintsAdded(), nil
 	})
 	if constraintsAdded == 1 {
-		log.Printf(`Created constraint "%s" for node "User".`, name)
+		log.Printf(`created constraint "%s" for node "User"`, name)
 	}
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func (analyser *Analyser) createNeo4jUniqueChannelIdConstraint() error {
 		return summary.Counters().ConstraintsAdded(), nil
 	})
 	if constraintsAdded == 1 {
-		log.Println(`Created constraint "channel_id" for node "Channel".`)
+		log.Println(`created constraint "channel_id" for node "Channel"`)
 	}
 	if err != nil {
 		return err
