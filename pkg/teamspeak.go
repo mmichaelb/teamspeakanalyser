@@ -201,6 +201,7 @@ func (analyser *Analyser) registerUserInteraction(clientInfo *clientInfo, talkTo
 	_, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		query := fmt.Sprintf("MATCH (u:User),(u2:User) WHERE u.uid = $uid AND u2.uid = $talkToUid "+
 			"MERGE (u)-[h:HANGS_WITH]->(u2) "+
+			"ON CREATE SET h.created_on = datetime() "+
 			"WITH h, COALESCE(h.%s, 0) as old_count "+
 			"SET h.last_interaction = datetime(), h.%s = old_count + $amount", weightName, weightName)
 		result, err := transaction.Run(query, map[string]interface{}{
@@ -223,6 +224,7 @@ func (analyser Analyser) registerChannelInteraction(channelId int, clientInfo *c
 	_, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		query := fmt.Sprintf("MATCH (c:Channel),(u:User) WHERE c.id = $id AND u.uid = $uid "+
 			"MERGE (u)-[h:HANGS_IN]->(c) "+
+			"ON CREATE SET h.created_on = datetime() "+
 			"WITH h, COALESCE(h.%s, 0) as old_count "+
 			"SET h.last_interaction = datetime(), h.%s = old_count + $amount", weightName, weightName)
 		result, err := transaction.Run(query, map[string]interface{}{
@@ -255,7 +257,7 @@ func determineIncrementWeight(clientInfo *clientInfo) string {
 func (analyser *Analyser) createNeo4jUserEntry(clientInfo *clientInfo) (bool, error) {
 	created, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		result, err := transaction.Run("MERGE (u:User {uid:$uid}) "+
-			"ON CREATE SET u.name = $name, u.clid = $clid "+
+			"ON CREATE SET u.name = $name, u.clid = $clid, u.created_on = datetime() "+
 			"ON MATCH SET u.name = $name", map[string]interface{}{
 			"uid":  clientInfo.UniqueIdentifier,
 			"name": clientInfo.Nickname,
@@ -282,6 +284,7 @@ func (analyser *Analyser) createNeo4jUserEntry(clientInfo *clientInfo) (bool, er
 func (analyser *Analyser) createNeo4jChannelEntry(channel *ts3.Channel) (bool, error) {
 	created, err := analyser.neo4jSession.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		result, err := transaction.Run("MERGE (c:Channel {id:$id}) "+
+			"ON CREATE SET c.created_on = datetime() "+
 			"SET c.name = $name", map[string]interface{}{
 			"id":   channel.ID,
 			"name": channel.ChannelName,
