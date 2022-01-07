@@ -13,6 +13,8 @@ github.com/mitchellh/mapstructure v1.3.3 h1:SzB1nHZ2Xi+17FP0zVQBHIZqvwRN9408fJO8
 github.com/mitchellh/mapstructure v1.3.3/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/multiplay/go-ts3 v1.0.1-0.20191016073628-e74853086850 h1:92p1kgxXxmTT82YuqggA01zFo4m7psao13BOjbTkSds=
 github.com/multiplay/go-ts3 v1.0.1-0.20191016073628-e74853086850/go.mod h1:WIP3X0efye5ENZdXLu8LV4woCbPoc41wuMHx3EcU5CI=
+github.com/multiplay/go-ts3 v1.0.1 h1:Ja8ho7UzUDNvNCwcDzPEPimLRub7MUqbD+sgMWkcR0A=
+github.com/multiplay/go-ts3 v1.0.1/go.mod h1:WIP3X0efye5ENZdXLu8LV4woCbPoc41wuMHx3EcU5CI=
 github.com/neo4j/neo4j-go-driver v1.8.3 h1:yfuo9YBAlezdIiogu92GwEir/81RD81dNwS5mY/wAIk=
 github.com/neo4j/neo4j-go-driver v1.8.3/go.mod h1:ncO5VaFWh0Nrt+4KT4mOZboaczBZcLuHrG+/sUeP8gI=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
