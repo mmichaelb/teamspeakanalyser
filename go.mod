@@ -1,6 +1,6 @@
 module github.com/mmichaelb/teamspeakanalyser
 
-go 1.13
+go 1.19
 
 require (
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
