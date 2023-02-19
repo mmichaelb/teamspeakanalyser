@@ -6,7 +6,8 @@ require (
 	github.com/multiplay/go-ts3 v1.1.0
 	github.com/neo4j/neo4j-go-driver v1.8.3
 	github.com/sirupsen/logrus v1.9.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
